@@ -1,16 +1,341 @@
+
 <!DOCTYPE html>
+<!-- Main HTML page for the Higher or Lower card game -->
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JavaScript Function Demo</title>
-    <Script src="code.js"></Script>
-    <link href="FirstCss.css" rel="stylesheet">
+  <!-- Sets the character encoding so text displays correctly -->
+  <meta charset="UTF-8" />
+  <!-- Makes the page scale correctly on mobile screens -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Title shown in the browser tab -->
+  <title>Higher or Lower</title>
+
+  <style>
+    /* Dark background, centered content */
+    body {
+      background-color: #1b1b2f;
+      color: #e0e0e0;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    /* Main title */
+    h1 {
+      color: #f0c040;
+      font-size: 2.5rem;
+      margin-bottom: 6px;
+    }
+
+    /* Subtitle under the title */
+    p.subtitle {
+      color: #9090b0;
+      margin-bottom: 30px;
+    }
+
+    /* Box that wraps the whole game */
+    .card {
+      background-color: #14142a;
+      border: 1px solid #2e2e50;
+      border-radius: 14px;
+      padding: 30px 24px;
+      max-width: 420px;
+      margin: 0 auto;
+    }
+
+    /* Big card emoji display */
+    #cardDisplay {
+      font-size: 5rem;
+      margin: 10px 0 4px;
+    }
+
+    /* Card name shown below the emoji */
+    #cardName {
+      font-size: 1.3rem;
+      color: #f0c040;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    /* Question above the buttons */
+    .question {
+      font-size: 1.1rem;
+      color: #c0c0e0;
+      margin-bottom: 16px;
+    }
+
+    /* Puts the two buttons side by side */
+    .btn-row {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 10px;
+    }
+
+    /* Style for both Higher and Lower buttons */
+    .btn-row button {
+      background-color: #f0c040;
+      color: #1b1b2f;
+      border: none;
+      padding: 12px 28px;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 130px;
+    }
+
+    /* Hover effect */
+    .btn-row button:hover {
+      background-color: #c9a030;
+    }
+
+    /* Scoreboard */
+    #scoreboard {
+      margin-top: 18px;
+      font-size: 0.95rem;
+      color: #9090b0;
+    }
+
+    /* Score numbers */
+    #scoreboard span {
+      font-weight: bold;
+      color: #e0e0e0;
+    }
+
+    /* Area where JS writes results using .innerHTML */
+    #result {
+      margin-top: 20px;
+      font-size: 1.05rem;
+      line-height: 1.8;
+      min-height: 50px;
+    }
+  </style>
 </head>
+
 <body>
-    <header>
-        <h1 id="heading">Welcome to my page</h1>
-        <button onclick="updateText();">Change Text</button>
-    </header>
+
+  <!-- Page title -->
+  <h1>🃏 Higher or Lower</h1>
+
+  <!-- Short description -->
+  <p class="subtitle">Will the next card be higher or lower?</p>
+
+  <!-- Main game box -->
+  <div class="card">
+
+    <!-- Shows the current card as a big emoji -->
+    <div id="cardDisplay">🂠</div>
+
+    <!-- Shows the current card name in text -->
+    <div id="cardName">Loading...</div>
+
+    <!-- Prompt for the player -->
+    <p class="question">Will the next card be...</p>
+
+    <!--
+      FORM: Both buttons live inside this form.
+      A hidden input stores which button was pressed.
+      action="#" stops the page from reloading.
+      All logic is handled in the script tag below.
+    -->
+    <form id="gameForm" action="#">
+
+      <!-- Hidden input that holds the player's guess -->
+      <input type="hidden" id="guessInput" value="" />
+
+      <!-- Button row: clicking either button sets the guess and submits -->
+      <div class="btn-row">
+        <button type="submit" id="btnHigher">⬆ Higher</button>
+        <button type="submit" id="btnLower">⬇ Lower</button>
+      </div>
+
+    </form>
+
+    <!-- Scoreboard updated by JS using .innerHTML -->
+    <div id="scoreboard">
+      Wins: <span id="wins">0</span> &nbsp;|&nbsp;
+      Losses: <span id="losses">0</span> &nbsp;|&nbsp;
+      Ties: <span id="ties">0</span>
+    </div>
+
+    <!-- All game output is written here by JS using .innerHTML -->
+    <div id="result"></div>
+
+  </div>
+
+  <script>
+    /*
+      All game logic lives here.
+      window.onload makes sure the page is fully built
+      before any JavaScript tries to find HTML elements.
+    */
+    window.onload = function () {
+
+      // Score counters
+      var wins   = 0; // number of rounds won
+      var losses = 0; // number of rounds lost
+      var ties   = 0; // number of rounds tied
+
+      // Holds the card currently shown on screen
+      var currentCard = 0;
+
+      // Deal the first card as soon as the page loads
+      currentCard = getRandomCard();
+      showCard(currentCard);
+
+      // ---------------------------------------------------
+      // FUNCTION: getRandomCard
+      // Returns a random whole number from 1 to 13.
+      // 1 = Ace, 11 = Jack, 12 = Queen, 13 = King
+      // ---------------------------------------------------
+      function getRandomCard() {
+        return Math.floor(Math.random() * 13) + 1; // 1 through 13
+      }
+
+      // ---------------------------------------------------
+      // FUNCTION: getCardName
+      // Takes a card number as a parameter and returns
+      // the matching card name as a string.
+      //
+      // Parameter:
+      //   num - a number from 1 to 13
+      // ---------------------------------------------------
+      function getCardName(num) {
+        if (num === 1) {
+          return "Ace";        // 1 is the Ace
+        } else if (num === 11) {
+          return "Jack";       // 11 is the Jack
+        } else if (num === 12) {
+          return "Queen";      // 12 is the Queen
+        } else if (num === 13) {
+          return "King";       // 13 is the King
+        } else {
+          return String(num);  // all other cards show their number
+        }
+      }
+
+      // ---------------------------------------------------
+      // FUNCTION: showCard
+      // Takes a card number and updates the card display
+      // on the page using .innerHTML.
+      //
+      // Parameter:
+      //   num - the card number to display
+      // ---------------------------------------------------
+      function showCard(num) {
+        // Update the emoji area using .innerHTML
+        document.getElementById("cardDisplay").innerHTML = "🃏";
+        // Update the card name using .innerHTML
+        document.getElementById("cardName").innerHTML = getCardName(num);
+      }
+
+      // ---------------------------------------------------
+      // FUNCTION: playRound
+      // Main game function. Runs when the form is submitted.
+      //
+      // Steps:
+      //   1. Stops the page from reloading
+      //   2. Reads the player's guess from the hidden input
+      //   3. Validates the guess using .innerHTML
+      //   4. Draws a new random card
+      //   5. Compares cards to find win, loss, or tie
+      //   6. Updates scores and writes results using .innerHTML
+      // ---------------------------------------------------
+      function playRound(event) {
+
+        // Stops the form from reloading the page
+        event.preventDefault();
+
+        // Get the result div where output will be written
+        var resultDiv = document.getElementById("result");
+
+        // Read the player's guess from the hidden input
+        var guess = document.getElementById("guessInput").value;
+
+        // VALIDATION: if no button was clicked, guess is empty
+        if (guess === "") {
+          // Write error to the page using .innerHTML — no alerts
+          resultDiv.innerHTML = "<p style='color:#ff6060;'>⚠ Please click Higher or Lower!</p>";
+          return; // stop the function here
+        }
+
+        // Draw a new random card
+        var nextCard = getRandomCard();
+
+        // DETERMINE OUTCOME using if / else if / else
+        var outcome; // will be "win", "loss", or "tie"
+
+        if (nextCard > currentCard && guess === "higher") {
+          outcome = "win";   // card went up and player guessed higher
+
+        } else if (nextCard < currentCard && guess === "lower") {
+          outcome = "win";   // card went down and player guessed lower
+
+        } else if (nextCard === currentCard) {
+          outcome = "tie";   // same value is always a tie
+
+        } else {
+          outcome = "loss";  // guess was wrong
+        }
+
+        // SET THE MESSAGE AND COLOR based on outcome
+        var message; // text shown to the player
+        var color;   // color of the result text
+
+        if (outcome === "win") {
+          wins = wins + 1;                       // increment win counter
+          message = "✅ Correct! You win!";
+          color = "#50e090";                     // green
+
+        } else if (outcome === "tie") {
+          ties = ties + 1;                       // increment tie counter
+          message = "🤝 Same card — it's a tie!";
+          color = "#f0c040";                     // yellow
+
+        } else {
+          losses = losses + 1;                   // increment loss counter
+          message = "❌ Wrong! You lose this round.";
+          color = "#ff6060";                     // red
+        }
+
+        // UPDATE SCOREBOARD using .innerHTML
+        document.getElementById("wins").innerHTML   = wins;
+        document.getElementById("losses").innerHTML = losses;
+        document.getElementById("ties").innerHTML   = ties;
+
+        // SHOW THE NEW CARD on screen using .innerHTML
+        showCard(nextCard);
+
+        // WRITE ROUND RESULT using .innerHTML
+        resultDiv.innerHTML =
+          "<p>Your guess: <strong>" + guess + "</strong></p>" +
+          "<p>Next card: <strong>" + getCardName(nextCard) + " (" + nextCard + ")</strong></p>" +
+          "<p style='font-size:1.2rem; color:" + color + ";'><strong>" + message + "</strong></p>";
+
+        // The new card becomes the current card for the next round
+        currentCard = nextCard;
+
+        // Reset the hidden input so the player must click again
+        document.getElementById("guessInput").value = "";
+      }
+
+      // Set the hidden input to "higher" when that button is clicked
+      document.getElementById("btnHigher").onclick = function () {
+        document.getElementById("guessInput").value = "higher";
+      };
+
+      // Set the hidden input to "lower" when that button is clicked
+      document.getElementById("btnLower").onclick = function () {
+        document.getElementById("guessInput").value = "lower";
+      };
+
+      // Connect the form submit event to the playRound function
+      document.getElementById("gameForm").addEventListener("submit", playRound);
+
+    }; // end of window.onload
+  </script>
+
 </body>
 </html>
